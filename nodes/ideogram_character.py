@@ -3,7 +3,6 @@ Ideogram Character Node for ComfyUI
 Generates consistent character images using Ideogram API v3
 """
 
-
 import torch
 
 import numpy as np
@@ -17,6 +16,7 @@ from typing import Optional, Tuple, List, Dict, Any
 import logging
 import os
 import sys
+
 
 # Import utilities with robust path handling
 try:
