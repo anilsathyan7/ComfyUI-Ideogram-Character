@@ -4,7 +4,6 @@ Generates consistent character images using Ideogram API v3
 """
 
 
-
 import torch
 
 import numpy as np
