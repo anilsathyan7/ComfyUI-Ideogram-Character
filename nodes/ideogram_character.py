@@ -94,19 +94,8 @@ class DP_IdeogramCharacter:
                     "placeholder": "Describe what you want to see"
                 }),
                 "character_image": ("IMAGE",),
-                "aspect_ratio": ([
-                    "1:1 (1024x1024)", "16:9 (1456x832)", "9:16 (832x1456)", 
-                    "4:3 (1152x896)", "3:4 (896x1152)", "10:16 (896x1408)", 
-                    "16:10 (1344x832)", "3:2 (1216x832)", "2:3 (832x1216)",
-                    "3:1 (1536x512)", "1:3 (512x1536)", "1:2 (832x1216)",
-                    "2:1 (1408x704)", "4:5 (896x1152)", "5:4 (1152x896)"
-                ], {
-                    "default": "1:1 (1024x1024)"
-                }),
-                "image_count": ([1, 2, 3, 4], {
-                    "default": 1
-                }),
-                "render_speed": (["Turbo", "Default", "Quality"], {
+                "character_mask": ("IMAGE",),
+                "render_speed": (["Flash", "Turbo", "Default", "Quality"], {
                     "default": "Default"
                 }),
                 "style_type": (["Auto", "General", "Realistic", "Design", "Fiction"], {
@@ -128,11 +117,11 @@ class DP_IdeogramCharacter:
     
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("images", "info")
-    FUNCTION = "generate"
-    CATEGORY = "image/generation"
+    FUNCTION = "edit"
+    CATEGORY = "image/editing"
     
     def __init__(self):
-        self.api_url = "https://api.ideogram.ai/v1/ideogram-v3/generate"
+        self.api_url = "https://api.ideogram.ai/v1/ideogram-v3/edit"
         self.max_retries = 3
         self.retry_delay = 1.0
     
@@ -242,7 +231,7 @@ class DP_IdeogramCharacter:
         
         # Basic required fields
         fields['prompt'] = kwargs['prompt']
-        fields['image_count'] = str(kwargs['image_count'])
+        fields['num_images'] = str(kwargs['image_count'])
         
         # Map style type to API format
         style_map = {
@@ -254,16 +243,11 @@ class DP_IdeogramCharacter:
         }
         fields['style_type'] = style_map.get(kwargs['style_type'], 'AUTO')
         
-        # Handle aspect ratio (custom option removed due to API compatibility issues)
-        # Extract just the ratio part from "1:1 (1024x1024)" format
-        aspect_ratio = kwargs['aspect_ratio'].split(' ')[0]  # Get "1:1" from "1:1 (1024x1024)"
-        # Convert colon format to x format (1:1 -> 1x1)
-        fields['aspect_ratio'] = aspect_ratio.replace(":", "x")
-        print(f"[Ideogram Character] Using preset aspect ratio: {fields['aspect_ratio']}")
         
         # Map render speed to match Ideogram API v3 specification
         # Based on Edit API docs: TURBO, DEFAULT, QUALITY are correct values
         speed_map = {
+            "Flash": "FLASH",
             "Turbo": "TURBO", 
             "Default": "DEFAULT",
             "Quality": "QUALITY"
@@ -287,6 +271,10 @@ class DP_IdeogramCharacter:
         # Add character reference image
         char_image_bytes = kwargs['character_image_bytes']
         files.append(('character_reference_images', ('character.png', char_image_bytes, 'image/png')))
+
+        # Add character reference image mask
+        char_image_mask_bytes = kwargs['character_image_mask_bytes']
+        files.append(('character_reference_images_mask', ('character_mask.png', char_image_mask_bytes, 'image/png')))
         
         return fields, files
     
@@ -455,8 +443,8 @@ class DP_IdeogramCharacter:
         
 
     
-    def generate(self, api_key: str, prompt: str, character_image: torch.Tensor, 
-                 aspect_ratio: str, image_count: int, render_speed: str, style_type: str,
+    def edit(self, api_key: str, prompt: str, character_image: torch.Tensor, 
+                 character_image_mask: torch.Tensor, image_count: int, render_speed: str, style_type: str,
                  seed: int = -1, magic_prompt: str = "AUTO", **kwargs) -> Tuple[torch.Tensor, str]:
         """Main generation function"""
         try:
@@ -467,7 +455,7 @@ class DP_IdeogramCharacter:
             
             logger.info("Starting Ideogram character generation")
             logger.info(f"Prompt: {prompt[:100]}...")
-            logger.info(f"Settings: {aspect_ratio}, {image_count} images, {render_speed} speed")
+            logger.info(f"Settings: {image_count} images, {render_speed} speed")
             logger.info(f"Magic prompt: {magic_prompt}, Seed: {seed}")
             
             # Debug console output for user
@@ -476,24 +464,28 @@ class DP_IdeogramCharacter:
             print(f"[Ideogram Character] - Image count: {image_count}")
             print(f"[Ideogram Character] - Magic prompt: {magic_prompt}")
             print(f"[Ideogram Character] - Style type: {style_type}")
-            print(f"[Ideogram Character] - Aspect ratio: {aspect_ratio}")
             print(f"[Ideogram Character] - Seed: {seed}")
             
             # Convert character image to bytes
             char_pil = self.tensor_to_pil(character_image)
             char_bytes = self.pil_to_bytes(char_pil)
             logger.info(f"Character image size: {len(char_bytes)} bytes")
-            
+
+            # Convert character image mask to bytes
+            char_mask_pil = self.tensor_to_pil(character_image_mask)
+            char_mask_bytes = self.pil_to_bytes(char_mask_pil)
+            logger.info(f"Character image mask size: {len(char_mask_bytes)} bytes")
+
             # Build request data
             fields, files = self.build_request_data(
                 prompt=prompt,
                 image_count=image_count,
-                aspect_ratio=aspect_ratio,
                 render_speed=render_speed,
                 style_type=style_type,
                 magic_prompt=magic_prompt,
                 seed=seed,
-                character_image_bytes=char_bytes
+                character_image_bytes=char_bytes,
+                character_image_mask_bytes=char_mask_bytes
             )
             
             # Make API request
@@ -504,6 +496,7 @@ class DP_IdeogramCharacter:
             print(f"[Ideogram Character] Request fields: {fields}")
             print(f"[Ideogram Character] Files: {[f[0] for f in files]}")
             print(f"[Ideogram Character] Character image bytes: {len(char_bytes)} bytes")
+            print(f"[Ideogram Character] Character image mask bytes: {len(char_mask_bytes)} bytes")
             
             response = self.make_api_request(api_key, fields, files)
             
