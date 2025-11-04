@@ -73,7 +73,7 @@ except (ImportError, ValueError):
 # Set up logging
 logger = logging.getLogger(__name__)
 
-class DP_IdeogramCharacter:
+class SD_IdeogramCharacter:
     """
     Generate consistent character images using Ideogram API v3 with character reference
     """
