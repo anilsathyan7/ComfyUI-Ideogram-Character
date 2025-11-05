@@ -6,7 +6,7 @@ Generates consistent character images using Ideogram API v3
 import torch
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 import json
 import time
@@ -492,12 +492,14 @@ class SD_IdeogramCharacter:
 
             # Convert source image mask to bytes
             src_mask_pil = self.tensor_to_pil(source_image_mask)
+            src_mask_pil = ImageOps.invert(src_mask_pil) # for ideogram api
             src_mask_bytes = self.pil_to_bytes(src_mask_pil)
             logger.info(f"Source image mask size: {len(src_mask_bytes)} bytes")
 
             # Convert character image mask to bytes, if available
             if character_image_mask is not None:
                 char_mask_pil = self.tensor_to_pil(character_image_mask)
+                char_mask_pil = ImageOps.invert(char_mask_pil) # for ideogram api
                 char_mask_bytes = self.pil_to_bytes(char_mask_pil)
                 logger.info(f"Character image mask size: {len(char_mask_bytes)} bytes")
             else:
