@@ -77,8 +77,6 @@ class SD_IdeogramCharacter:
     """
     Generate consistent character images using Ideogram API v3 with character reference
     """
-
-
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -498,7 +496,7 @@ class SD_IdeogramCharacter:
             logger.info(f"Source image mask size: {len(src_mask_bytes)} bytes")
 
             # Convert character image mask to bytes, if available
-            if character_image_mask:
+            if character_image_mask is not None:
                 char_mask_pil = self.tensor_to_pil(character_image_mask)
                 char_mask_bytes = self.pil_to_bytes(char_mask_pil)
                 logger.info(f"Character image mask size: {len(char_mask_bytes)} bytes")
