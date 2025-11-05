@@ -92,8 +92,9 @@ class SD_IdeogramCharacter:
                     "default": "",
                     "placeholder": "Describe what you want to see"
                 }),
+                "source_image": ("IMAGE",),
                 "character_image": ("IMAGE",),
-                "character_mask": ("IMAGE",),
+                "character_mask": ("MASK",),
                 "render_speed": (["Flash", "Turbo", "Default", "Quality"], {
                     "default": "Default"
                 }),
@@ -266,7 +267,11 @@ class SD_IdeogramCharacter:
         
         # Store seed for info
         self.used_seed = fields['seed']
-        
+
+        # Add source image
+        src_image_bytes = kwargs['source_image_bytes']
+        files.append(('source_image', ('source.png', src_image_bytes, 'image/png')))
+
         # Add character reference image
         char_image_bytes = kwargs['character_image_bytes']
         files.append(('character_reference_images', ('character.png', char_image_bytes, 'image/png')))
@@ -427,7 +432,7 @@ class SD_IdeogramCharacter:
         
         # Validate render speed
         render_speed = kwargs.get('render_speed', 'Default')
-        if render_speed not in ['Turbo', 'Default', 'Quality']:
+        if render_speed not in ['Flash','Turbo', 'Default', 'Quality']:
             raise ValueError(f"Invalid render speed: {render_speed}")
         
         # Validate magic prompt
@@ -442,7 +447,7 @@ class SD_IdeogramCharacter:
         
 
     
-    def edit(self, api_key: str, prompt: str, character_image: torch.Tensor, 
+    def edit(self, api_key: str, prompt: str, source_image: torch.Tensor, character_image: torch.Tensor, 
                  character_image_mask: torch.Tensor, image_count: int, render_speed: str, style_type: str,
                  seed: int = -1, magic_prompt: str = "AUTO", **kwargs) -> Tuple[torch.Tensor, str]:
         """Main generation function"""
@@ -466,6 +471,8 @@ class SD_IdeogramCharacter:
             print(f"[Ideogram Character] - Seed: {seed}")
             
             # Convert character image to bytes
+            src_pil = self.tensor_to_pil(source_image)
+            src_bytes = self.pil_to_bytes(src_pil)
             char_pil = self.tensor_to_pil(character_image)
             char_bytes = self.pil_to_bytes(char_pil)
             logger.info(f"Character image size: {len(char_bytes)} bytes")
@@ -483,6 +490,7 @@ class SD_IdeogramCharacter:
                 style_type=style_type,
                 magic_prompt=magic_prompt,
                 seed=seed,
+                source_image_bytes=src_bytes,
                 character_image_bytes=char_bytes,
                 character_image_mask_bytes=char_mask_bytes
             )
@@ -494,6 +502,7 @@ class SD_IdeogramCharacter:
             print(f"[Ideogram Character] API URL: {self.api_url}")
             print(f"[Ideogram Character] Request fields: {fields}")
             print(f"[Ideogram Character] Files: {[f[0] for f in files]}")
+            print(f"[Ideogram Character] Source image bytes: {len(src_bytes)} bytes")
             print(f"[Ideogram Character] Character image bytes: {len(char_bytes)} bytes")
             print(f"[Ideogram Character] Character image mask bytes: {len(char_mask_bytes)} bytes")
             

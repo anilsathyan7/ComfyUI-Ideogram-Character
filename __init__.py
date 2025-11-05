@@ -47,6 +47,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 
 # Version info
 __version__ = "1.0.0"
-__author__ = "DP"
+__author__ = "SD"
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
