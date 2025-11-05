@@ -135,7 +135,10 @@ class SD_IdeogramCharacter:
         # Handle batch dimension
         if len(tensor.shape) == 4:
             tensor = tensor[0]  # Take first image from batch
-        elif len(tensor.shape) != 3:
+        elif len(tensor.shape) == 3: # For 2d mask with batch
+            if tensor.size(0) == 1:
+                tensor = tensor.squeeze(0).unsqueeze(-1)
+        else:
             raise ValueError(f"Expected 3D or 4D tensor, got shape {tensor.shape}")
         
         # Ensure tensor is on CPU and convert to numpy
