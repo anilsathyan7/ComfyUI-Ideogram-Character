@@ -278,15 +278,15 @@ class SD_IdeogramCharacter:
 
         # Add source image
         src_image_bytes = kwargs['source_image_bytes']
-        files.append(('source_image', ('source.png', src_image_bytes, 'image/png')))
+        files.append(('image', ('source.png', src_image_bytes, 'image/png')))
 
         # Add character reference image
         char_image_bytes = kwargs['character_image_bytes']
         files.append(('character_reference_images', ('character.png', char_image_bytes, 'image/png')))
 
-        # Add character reference image mask
+        # Add reference image mask
         src_image_mask_bytes = kwargs['source_image_mask_bytes']
-        files.append(('character_reference_images_mask', ('source_mask.png', src_image_mask_bytes, 'image/png')))
+        files.append(('mask', ('source_mask.png', src_image_mask_bytes, 'image/png')))
         
         return fields, files
     
