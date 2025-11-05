@@ -77,6 +77,8 @@ class SD_IdeogramCharacter:
     """
     Generate consistent character images using Ideogram API v3 with character reference
     """
+
+
     
     @classmethod
     def INPUT_TYPES(cls):
