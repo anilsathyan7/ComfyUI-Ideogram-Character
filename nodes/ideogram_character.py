@@ -529,7 +529,8 @@ class SD_IdeogramCharacter:
             print(f"[Ideogram Character] Source image bytes: {len(src_bytes)} bytes")
             print(f"[Ideogram Character] Character image bytes: {len(char_bytes)} bytes")
             print(f"[Ideogram Character] Source image mask bytes: {len(src_mask_bytes)} bytes")
-            print(f"[Ideogram Character] Character image mask bytes: {len(char_mask_bytes)} bytes")
+            if char_mask_bytes is not None:
+                print(f"[Ideogram Character] Character image mask bytes: {len(char_mask_bytes)} bytes")
             
             response = self.make_api_request(api_key, fields, files)
             
