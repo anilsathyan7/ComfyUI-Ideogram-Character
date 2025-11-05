@@ -96,9 +96,12 @@ class SD_IdeogramCharacter:
                 }),
                 "source_image": ("IMAGE",),
                 "character_image": ("IMAGE",),
-                "character_mask": ("MASK",),
+                "source_image_mask": ("MASK",),
                 "render_speed": (["Flash", "Turbo", "Default", "Quality"], {
                     "default": "Default"
+                }),
+                "image_count": ([1, 2, 3, 4], {
+                    "default": 1
                 }),
                 "style_type": (["Auto", "General", "Realistic", "Design", "Fiction"], {
                     "default": "Auto",
@@ -279,8 +282,8 @@ class SD_IdeogramCharacter:
         files.append(('character_reference_images', ('character.png', char_image_bytes, 'image/png')))
 
         # Add character reference image mask
-        char_image_mask_bytes = kwargs['character_image_mask_bytes']
-        files.append(('character_reference_images_mask', ('character_mask.png', char_image_mask_bytes, 'image/png')))
+        src_image_mask_bytes = kwargs['source_image_mask_bytes']
+        files.append(('character_reference_images_mask', ('source_mask.png', src_image_mask_bytes, 'image/png')))
         
         return fields, files
     
@@ -450,7 +453,7 @@ class SD_IdeogramCharacter:
 
     
     def edit(self, api_key: str, prompt: str, source_image: torch.Tensor, character_image: torch.Tensor, 
-                 character_image_mask: torch.Tensor, image_count: int, render_speed: str, style_type: str,
+                 source_image_mask: torch.Tensor, image_count: int, render_speed: str, style_type: str,
                  seed: int = -1, magic_prompt: str = "AUTO", **kwargs) -> Tuple[torch.Tensor, str]:
         """Main generation function"""
         try:
@@ -479,10 +482,10 @@ class SD_IdeogramCharacter:
             char_bytes = self.pil_to_bytes(char_pil)
             logger.info(f"Character image size: {len(char_bytes)} bytes")
 
-            # Convert character image mask to bytes
-            char_mask_pil = self.tensor_to_pil(character_image_mask)
-            char_mask_bytes = self.pil_to_bytes(char_mask_pil)
-            logger.info(f"Character image mask size: {len(char_mask_bytes)} bytes")
+            # Convert source image mask to bytes
+            src_mask_pil = self.tensor_to_pil(source_image_mask)
+            src_mask_bytes = self.pil_to_bytes(src_mask_pil)
+            logger.info(f"Source image mask size: {len(src_mask_bytes)} bytes")
 
             # Build request data
             fields, files = self.build_request_data(
@@ -494,7 +497,7 @@ class SD_IdeogramCharacter:
                 seed=seed,
                 source_image_bytes=src_bytes,
                 character_image_bytes=char_bytes,
-                character_image_mask_bytes=char_mask_bytes
+                source_image_mask_bytes=src_mask_bytes
             )
             
             # Make API request
@@ -506,7 +509,7 @@ class SD_IdeogramCharacter:
             print(f"[Ideogram Character] Files: {[f[0] for f in files]}")
             print(f"[Ideogram Character] Source image bytes: {len(src_bytes)} bytes")
             print(f"[Ideogram Character] Character image bytes: {len(char_bytes)} bytes")
-            print(f"[Ideogram Character] Character image mask bytes: {len(char_mask_bytes)} bytes")
+            print(f"[Ideogram Character] Source image mask bytes: {len(src_mask_bytes)} bytes")
             
             response = self.make_api_request(api_key, fields, files)
             
